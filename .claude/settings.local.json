@@ -1,0 +1,39 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm install:*)",
+      "Read(//Users/sakomotokiyotaka/.nvm/versions/**)",
+      "Bash(echo PATH=$PATH)",
+      "Bash(brew list:*)",
+      "Bash(brew info:*)",
+      "Bash(ls /usr/local/Cellar/python@3.10/3.10*/bin/)",
+      "Read(//Users/sakomotokiyotaka/**)",
+      "Bash(ls /opt/homebrew/opt/node*/bin/)",
+      "Bash(command -v node)",
+      "Bash(command -v npm)",
+      "Bash(command -v bun)",
+      "Bash(command -v deno)",
+      "Bash(env)",
+      "Bash(/usr/bin/python3 -m http.server --version)",
+      "Bash(curl -fsSL https://nodejs.org/dist/v20.11.1/node-v20.11.1-darwin-arm64.tar.gz -o /tmp/node.tar.gz)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(tar xzf:*)",
+      "Bash(/tmp/node-v20.11.1-darwin-arm64/bin/node --version)",
+      "Bash(/tmp/node-v20.11.1-darwin-arm64/bin/npm --version)",
+      "Bash(ln -sf /tmp/node-v20.11.1-darwin-arm64/bin/node /usr/local/bin/node)",
+      "Bash(ln -sf /tmp/node-v20.11.1-darwin-arm64/bin/npm /usr/local/bin/npm)",
+      "Bash(export PATH=\"/tmp/node-v20.11.1-darwin-arm64/bin:$PATH\")",
+      "Bash(npm --version)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(/usr/local/bin/npm install:*)",
+      "Read(//usr/local/bin/**)",
+      "Bash(/usr/local/bin/node --version)",
+      "Read(//usr/local/lib/node_modules/**)",
+      "Bash(/usr/local/bin/node /usr/local/lib/node_modules/npm/bin/npm-cli.js --version)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" npm install --prefix /Users/sakomotokiyotaka/Documents/projects/my-project vite-plugin-pwa --save-dev)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" git init)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}

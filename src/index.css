@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Hiragino Sans', 'Hiragino Kaku Gothic ProN', 'Noto Sans JP', sans-serif;
+  }
+
+  body {
+    @apply bg-slate-50 text-slate-800;
+    overflow: hidden;
+  }
+}
+
+@layer components {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #cbd5e1;
+    border-radius: 2px;
+  }
+
+  .status-badge-todo {
+    @apply bg-slate-100 text-slate-600 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+
+  .status-badge-in-progress {
+    @apply bg-blue-100 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+
+  .status-badge-completed {
+    @apply bg-green-100 text-green-700 text-xs font-medium px-2 py-0.5 rounded-full;
+  }
+}
+
+@keyframes ring-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+.timer-ring {
+  animation: ring-pulse 2s ease-in-out infinite;
+}
+
+.animate-completion {
+  animation: completion 0.6s ease-out forwards;
+}
+
+@keyframes completion {
+  0% { transform: scale(0.8); opacity: 0; }
+  60% { transform: scale(1.1); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}

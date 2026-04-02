@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "task-manager",
+      "runtimeExecutable": "/tmp/node-v20.11.1-darwin-arm64/bin/node",
+      "runtimeArgs": ["/Users/sakomotokiyotaka/Documents/projects/my-project/node_modules/.bin/vite", "--port", "5173"],
+      "port": 5173
+    }
+  ]
+}
