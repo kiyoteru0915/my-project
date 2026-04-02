@@ -7,7 +7,7 @@ import {
 import { SortableContext, verticalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { useStore } from '../store/useStore'
-import { Project } from '../types'
+import { Project, SubFolder } from '../types'
 import CreateProjectModal from './CreateProjectModal'
 
 // Sortable project row component
@@ -18,7 +18,7 @@ function SortableProjectRow({
   handleAddSubFolder, deleteProject, deleteSubFolder,
 }: {
   project: Project
-  subFolders: ReturnType<typeof useStore>['subFolders']
+  subFolders: SubFolder[]
   currentView: string
   setCurrentView: (v: string) => void
   expandedProjects: Set<string>

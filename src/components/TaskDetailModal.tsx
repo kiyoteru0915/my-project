@@ -175,8 +175,9 @@ export default function TaskDetailModal() {
       milestones: [],
       status: 'todo',
       isToday: false,
+      recurrence: 'none',
       generateBreakdown: false,
-    } as Parameters<typeof addTask>[0])
+    })
     alert(`「${milestone.name}」をタスクとして追加しました`)
   }
 

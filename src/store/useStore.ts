@@ -127,7 +127,7 @@ interface StoreState {
   addSubFolder: (projectId: string, name: string) => void
   deleteSubFolder: (id: string) => void
 
-  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'timerElapsedSeconds' | 'milestones' | 'subTaskSegments' | 'order'> & { generateBreakdown?: boolean }) => void
+  addTask: (task: Omit<Task, 'id' | 'createdAt' | 'timerElapsedSeconds' | 'order'> & { generateBreakdown?: boolean }) => void
   updateTask: (id: string, updates: Partial<Task>) => void
   deleteTask: (id: string) => void
   toggleTaskToday: (id: string) => void
@@ -222,9 +222,9 @@ export const useStore = create<StoreState>()(
           createdAt: new Date().toISOString(),
           timerElapsedSeconds: 0,
           order: projectTasks.length,
+          ...rest,
           milestones,
           subTaskSegments,
-          ...rest,
         }
         set((state) => ({ tasks: [...state.tasks, task] }))
       },
@@ -252,9 +252,7 @@ export const useStore = create<StoreState>()(
             timerStartedAt: undefined,
             deadline: newDeadline,
             order: tasks.filter((t) => t.projectId === task.projectId).length,
-            milestones: task.recurrence !== 'none'
-              ? generateMilestones(task.title, new Date(), new Date(newDeadline))
-              : [],
+            milestones: generateMilestones(task.title, new Date(), new Date(newDeadline)),
             subTaskSegments: generateSubTaskSegments(task.estimatedMinutes),
             createdAt: new Date().toISOString(),
           }

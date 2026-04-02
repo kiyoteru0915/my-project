@@ -272,7 +272,7 @@ function allocateTime(segments: Omit<SubTaskSegment, 'id' | 'completed'>[], tota
   else if (count === 4) ratios.push(0.1, 0.5, 0.25, 0.15)
   else ratios.push(...Array(count).fill(1 / count))
 
-  const minutes = ratios.map((r, i) => {
+  const minutes = ratios.map((r) => {
     const m = Math.round(totalMinutes * r)
     return Math.max(1, m)
   })

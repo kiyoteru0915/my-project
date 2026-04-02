@@ -33,7 +33,11 @@
       "Bash(PATH=\"/usr/local/bin:$PATH\" npm install --prefix /Users/sakomotokiyotaka/Documents/projects/my-project vite-plugin-pwa --save-dev)",
       "Bash(PATH=\"/usr/local/bin:$PATH\" git init)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" npm install --prefix /Users/sakomotokiyotaka/Documents/projects/my-project @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities)",
+      "Bash(git remote:*)",
+      "Bash(git push:*)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" npm run build)"
     ]
   }
 }

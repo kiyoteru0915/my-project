@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Menu, X, Calendar, FolderOpen, Timer } from 'lucide-react'
+import { Menu, Calendar, FolderOpen, Timer } from 'lucide-react'
 import { useStore } from './store/useStore'
 import Sidebar from './components/Sidebar'
 import TodayView from './components/TodayView'
