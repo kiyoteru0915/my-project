@@ -3,10 +3,14 @@ import { format, parseISO } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import {
   X, Calendar, Clock, CheckCircle2, Circle, Timer, Star, StarOff,
-  Trash2, Edit3, ChevronRight, Plus, Check, GripVertical, Pencil, ListPlus
+  Trash2, Edit3, ChevronRight, Plus, Check, GripVertical, Pencil, ListPlus, RefreshCw
 } from 'lucide-react'
 import { useStore } from '../store/useStore'
-import { SubTaskSegment, MilestoneTask } from '../types'
+import { SubTaskSegment, MilestoneTask, RecurrenceType } from '../types'
+
+const recurrenceLabels: Record<RecurrenceType, string> = {
+  none: 'なし', weekly: '毎週', monthly: '毎月', yearly: '毎年',
+}
 
 const statusConfig = {
   todo: { label: '未着手', color: 'bg-slate-100 text-slate-600' },
@@ -34,6 +38,8 @@ export default function TaskDetailModal() {
   const [editDeadline, setEditDeadline] = useState('')
   const [editEstimatedMinutes, setEditEstimatedMinutes] = useState(60)
   const [editSubFolderId, setEditSubFolderId] = useState<string | undefined>(undefined)
+  const [editRecurrence, setEditRecurrence] = useState<RecurrenceType>('none')
+  const [editRecurrenceDay, setEditRecurrenceDay] = useState<number | undefined>(undefined)
 
   // Segment editing
   const [editingSegmentId, setEditingSegmentId] = useState<string | null>(null)
@@ -56,6 +62,8 @@ export default function TaskDetailModal() {
     setEditDeadline(task.deadline)
     setEditEstimatedMinutes(task.estimatedMinutes)
     setEditSubFolderId(task.subFolderId)
+    setEditRecurrence(task.recurrence ?? 'none')
+    setEditRecurrenceDay(task.recurrenceDay)
     setIsEditing(true)
   }
 
@@ -66,6 +74,8 @@ export default function TaskDetailModal() {
       deadline: editDeadline,
       estimatedMinutes: editEstimatedMinutes,
       subFolderId: editSubFolderId,
+      recurrence: editRecurrence,
+      recurrenceDay: editRecurrenceDay,
     })
     setIsEditing(false)
   }
@@ -294,6 +304,69 @@ export default function TaskDetailModal() {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1 flex items-center gap-1">
+                  <RefreshCw size={12} /> 繰り返し
+                </label>
+                <div className="grid grid-cols-4 gap-1">
+                  {(['none', 'weekly', 'monthly', 'yearly'] as RecurrenceType[]).map((r) => (
+                    <button
+                      key={r} type="button"
+                      onClick={() => { setEditRecurrence(r); setEditRecurrenceDay(undefined) }}
+                      className={`py-1.5 text-xs font-medium rounded-lg transition-all ${
+                        editRecurrence === r ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {recurrenceLabels[r]}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Weekday selector */}
+                {editRecurrence === 'weekly' && (
+                  <div className="mt-2">
+                    <p className="text-xs text-slate-500 mb-1.5">繰り返す曜日</p>
+                    <div className="flex gap-1">
+                      {['日', '月', '火', '水', '木', '金', '土'].map((label, idx) => (
+                        <button
+                          key={idx} type="button"
+                          onClick={() => setEditRecurrenceDay(idx)}
+                          className={`flex-1 py-1.5 text-xs font-medium rounded-lg transition-all ${
+                            editRecurrenceDay === idx
+                              ? (idx === 0 ? 'bg-red-500 text-white' : idx === 6 ? 'bg-blue-500 text-white' : 'bg-blue-600 text-white')
+                              : (idx === 0 ? 'bg-red-50 text-red-400 hover:bg-red-100' : idx === 6 ? 'bg-blue-50 text-blue-400 hover:bg-blue-100' : 'bg-slate-100 text-slate-600 hover:bg-slate-200')
+                          }`}
+                        >
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Day-of-month selector */}
+                {editRecurrence === 'monthly' && (
+                  <div className="mt-2">
+                    <p className="text-xs text-slate-500 mb-1.5">繰り返す日</p>
+                    <div className="grid grid-cols-7 gap-1">
+                      {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+                        <button
+                          key={day} type="button"
+                          onClick={() => setEditRecurrenceDay(day)}
+                          className={`py-1 text-xs font-medium rounded-md transition-all ${
+                            editRecurrenceDay === day
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-slate-100 text-slate-600 hover:bg-blue-50 hover:text-blue-600'
+                          }`}
+                        >
+                          {day}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {projectSubFolders.length > 0 && (
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">サブフォルダ</label>
@@ -367,7 +440,17 @@ export default function TaskDetailModal() {
                 <p className="text-sm font-semibold text-slate-800">{task.estimatedMinutes} 分</p>
               </div>
 
-              {task.timerElapsedSeconds > 0 && (
+              {task.recurrence && task.recurrence !== 'none' && (
+                <div className="bg-blue-50 rounded-xl p-3">
+                  <div className="flex items-center gap-2 text-blue-600 mb-1">
+                    <RefreshCw size={14} />
+                    <span className="text-xs font-medium">繰り返し</span>
+                  </div>
+                  <p className="text-sm font-semibold text-blue-700">{recurrenceLabels[task.recurrence]}</p>
+                </div>
+              )}
+
+            {task.timerElapsedSeconds > 0 && (
                 <div className="bg-blue-50 rounded-xl p-3">
                   <div className="flex items-center gap-2 text-blue-600 mb-1">
                     <Timer size={14} />

@@ -11,6 +11,14 @@
     @apply bg-slate-50 text-slate-800;
     overflow: hidden;
   }
+
+  button {
+    cursor: pointer;
+  }
+
+  input[type="date"] {
+    cursor: pointer;
+  }
 }
 
 @layer components {

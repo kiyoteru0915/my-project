@@ -13,19 +13,24 @@ export interface MilestoneTask {
   completedDate?: string
 }
 
+export type RecurrenceType = 'none' | 'weekly' | 'monthly' | 'yearly'
+
 export interface Task {
   id: string
   projectId: string
-  subFolderId?: string // optional sub-folder
+  subFolderId?: string
   title: string
   description: string
   deadline: string // ISO date - final deadline
   completionDate?: string // ISO date - when actually completed
-  estimatedMinutes: number // for timer
-  subTaskSegments: SubTaskSegment[] // time breakdown
-  milestones: MilestoneTask[] // auto-generated milestone tasks
+  estimatedMinutes: number
+  subTaskSegments: SubTaskSegment[]
+  milestones: MilestoneTask[]
   status: 'todo' | 'in-progress' | 'completed'
-  isToday: boolean // manually marked for today
+  isToday: boolean
+  recurrence: RecurrenceType // 繰り返し設定
+  recurrenceDay?: number   // 毎週: 0=日〜6=土、毎月: 1〜31
+  order: number // 表示順
   createdAt: string
   timerStartedAt?: string
   timerElapsedSeconds: number
@@ -35,6 +40,7 @@ export interface Project {
   id: string
   name: string
   color: string
+  order: number // 表示順
   createdAt: string
 }
 
