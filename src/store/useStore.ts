@@ -6,6 +6,18 @@ import { generateMilestones, generateSubTaskSegments } from '../utils/taskBreakd
 import { pushAllToCloud, pullAllFromCloud } from '../lib/syncService'
 import { isSupabaseEnabled } from '../lib/supabase'
 
+// Auto-push tracking: null means "not yet hydrated from localStorage"
+let _prevProjects: Project[] | null = null
+let _prevSubFolders: SubFolder[] | null = null
+let _prevTasks: Task[] | null = null
+let _pushTimer: ReturnType<typeof setTimeout> | null = null
+
+function updatePrevRefs(projects: Project[], subFolders: SubFolder[], tasks: Task[]) {
+  _prevProjects = projects
+  _prevSubFolders = subFolders
+  _prevTasks = tasks
+}
+
 function generateWorkspaceId(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
     const r = Math.random() * 16 | 0
@@ -213,18 +225,20 @@ export const useStore = create<StoreState>()(
             set({ syncStatus: 'error' })
             return
           }
-          if (data.projects.length > 0 || data.tasks.length > 0) {
-            set({
-              projects: data.projects,
-              subFolders: data.subFolders,
-              tasks: data.tasks,
-              syncStatus: 'synced',
-              lastSyncedAt: new Date().toISOString(),
-            })
-          } else {
-            set({ syncStatus: 'idle' })
-          }
-        } catch {
+          const newProjects = data.projects.length > 0 ? data.projects : get().projects
+          const newSubFolders = data.subFolders.length > 0 ? data.subFolders : get().subFolders
+          const newTasks = data.tasks.length > 0 ? data.tasks : get().tasks
+          // Update prev refs BEFORE set() to prevent auto-push from firing
+          updatePrevRefs(newProjects, newSubFolders, newTasks)
+          set({
+            projects: newProjects,
+            subFolders: newSubFolders,
+            tasks: newTasks,
+            syncStatus: 'synced',
+            lastSyncedAt: new Date().toISOString(),
+          })
+        } catch (e) {
+          console.error('[Sync] pull error:', e)
           set({ syncStatus: 'error' })
         }
       },
@@ -234,7 +248,12 @@ export const useStore = create<StoreState>()(
         set({ syncStatus: 'syncing' })
         try {
           const data = await pullAllFromCloud(id)
-          if (!data) { set({ syncStatus: 'error' }); return false }
+          if (!data || (data.projects.length === 0 && data.tasks.length === 0)) {
+            set({ syncStatus: 'error' })
+            return false
+          }
+          // Update prev refs BEFORE set() to prevent auto-push from firing
+          updatePrevRefs(data.projects, data.subFolders, data.tasks)
           set({
             workspaceId: id,
             projects: data.projects,
@@ -488,32 +507,37 @@ export const useStore = create<StoreState>()(
         workspaceId: state.workspaceId,
         lastSyncedAt: state.lastSyncedAt,
       }),
+      onRehydrateStorage: () => (state) => {
+        // After localStorage hydration, initialize prev refs so auto-push
+        // doesn't fire for the hydration state change itself
+        if (state) {
+          updatePrevRefs(state.projects, state.subFolders, state.tasks)
+        }
+      },
     }
   )
 )
 
-// Auto-push to Supabase 2 seconds after data changes (not timer changes)
+// Auto-push to Supabase 2 seconds after data changes (not timer changes, not pulls)
 if (isSupabaseEnabled) {
-  let prevProjects = useStore.getState().projects
-  let prevSubFolders = useStore.getState().subFolders
-  let prevTasks = useStore.getState().tasks
-  let pushTimer: ReturnType<typeof setTimeout> | null = null
-
   useStore.subscribe((state) => {
-    const dataChanged =
-      state.projects !== prevProjects ||
-      state.subFolders !== prevSubFolders ||
-      state.tasks !== prevTasks
+    // _prevProjects is null until localStorage hydration completes — skip until then
+    if (_prevProjects === null) return
 
-    prevProjects = state.projects
-    prevSubFolders = state.subFolders
-    prevTasks = state.tasks
+    const dataChanged =
+      state.projects !== _prevProjects ||
+      state.subFolders !== _prevSubFolders ||
+      state.tasks !== _prevTasks
+
+    _prevProjects = state.projects
+    _prevSubFolders = state.subFolders
+    _prevTasks = state.tasks
 
     if (!dataChanged || !state.workspaceId) return
 
-    if (pushTimer) clearTimeout(pushTimer)
+    if (_pushTimer) clearTimeout(_pushTimer)
     useStore.setState({ syncStatus: 'syncing' })
-    pushTimer = setTimeout(async () => {
+    _pushTimer = setTimeout(async () => {
       const s = useStore.getState()
       try {
         await pushAllToCloud(s.workspaceId, {
