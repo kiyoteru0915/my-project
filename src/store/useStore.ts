@@ -206,9 +206,13 @@ export const useStore = create<StoreState>()(
         if (!isSupabaseEnabled) return
         const { workspaceId } = get()
         if (!workspaceId) return
+        set({ syncStatus: 'syncing' })
         try {
           const data = await pullAllFromCloud(workspaceId)
-          if (!data) return
+          if (!data) {
+            set({ syncStatus: 'error' })
+            return
+          }
           if (data.projects.length > 0 || data.tasks.length > 0) {
             set({
               projects: data.projects,
@@ -217,9 +221,11 @@ export const useStore = create<StoreState>()(
               syncStatus: 'synced',
               lastSyncedAt: new Date().toISOString(),
             })
+          } else {
+            set({ syncStatus: 'idle' })
           }
         } catch {
-          // サイレントに失敗（ローカルデータを維持）
+          set({ syncStatus: 'error' })
         }
       },
 

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { X, Copy, Check, RefreshCw, AlertCircle, CloudOff, Loader2 } from 'lucide-react'
+import { X, Copy, Check, RefreshCw, AlertCircle, CloudOff, Loader2, Download } from 'lucide-react'
 import { useStore } from '../store/useStore'
 import { isSupabaseEnabled } from '../lib/supabase'
 import { format, parseISO } from 'date-fns'
@@ -10,7 +10,7 @@ interface Props {
 }
 
 export default function SyncModal({ onClose }: Props) {
-  const { workspaceId, syncStatus, lastSyncedAt, syncNow, switchWorkspace } = useStore()
+  const { workspaceId, syncStatus, lastSyncedAt, syncNow, pullFromCloud, switchWorkspace } = useStore()
   const [copied, setCopied] = useState(false)
   const [inputCode, setInputCode] = useState('')
   const [switching, setSwitching] = useState(false)
@@ -104,15 +104,25 @@ export default function SyncModal({ onClose }: Props) {
               </div>
             </div>
 
-            {/* Manual sync */}
-            <button
-              onClick={syncNow}
-              disabled={syncStatus === 'syncing'}
-              className="w-full flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors"
-            >
-              <RefreshCw size={15} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
-              今すぐ同期する
-            </button>
+            {/* Manual sync buttons */}
+            <div className="flex gap-2">
+              <button
+                onClick={syncNow}
+                disabled={syncStatus === 'syncing'}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors"
+              >
+                <RefreshCw size={15} className={syncStatus === 'syncing' ? 'animate-spin' : ''} />
+                クラウドへ保存
+              </button>
+              <button
+                onClick={pullFromCloud}
+                disabled={syncStatus === 'syncing'}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 bg-slate-600 text-white text-sm font-medium rounded-xl hover:bg-slate-700 disabled:opacity-50 transition-colors"
+              >
+                <Download size={15} />
+                クラウドから取得
+              </button>
+            </div>
 
             <hr className="border-slate-200" />
 
