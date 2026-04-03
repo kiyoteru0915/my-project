@@ -9,9 +9,16 @@ import FocusTimer from './components/FocusTimer'
 import SyncModal from './components/SyncModal'
 
 function App() {
-  const { currentView, selectedTaskId, isTimerOpen, tickTimer, timerState, projects, subFolders, openTimer, syncStatus } = useStore()
+  const { currentView, selectedTaskId, isTimerOpen, tickTimer, timerState, projects, subFolders, openTimer, syncStatus, switchWorkspace, workspaceId } = useStore()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSyncOpen, setIsSyncOpen] = useState(false)
+
+  // アプリ起動時にクラウドから最新データを取得
+  useEffect(() => {
+    if (workspaceId) {
+      switchWorkspace(workspaceId)
+    }
+  }, [])
 
   useEffect(() => {
     const interval = setInterval(() => {
