@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Calendar, FolderOpen, Plus, Trash2, Timer, ChevronDown, ChevronRight, FolderPlus, Folder, X, GripVertical } from 'lucide-react'
+import { Calendar, FolderOpen, Plus, Trash2, Timer, ChevronDown, ChevronRight, FolderPlus, Folder, X, GripVertical, RefreshCw } from 'lucide-react'
 import {
   DndContext, closestCenter, PointerSensor, TouchSensor,
   useSensor, useSensors, DragEndEvent,
@@ -163,9 +163,10 @@ function SortableProjectRow({
 
 interface Props {
   onClose?: () => void
+  onSyncOpen?: () => void
 }
 
-export default function Sidebar({ onClose }: Props) {
+export default function Sidebar({ onClose, onSyncOpen }: Props) {
   const {
     projects, subFolders, currentView, setCurrentView,
     deleteProject, addSubFolder, deleteSubFolder, reorderProjects,
@@ -218,15 +219,25 @@ export default function Sidebar({ onClose }: Props) {
             <h1 className="text-lg font-bold text-slate-800 tracking-tight">タスク管理</h1>
             <p className="text-xs text-slate-400 mt-0.5">Task Manager</p>
           </div>
-          {/* Close button for mobile drawer */}
-          {onClose && (
-            <button
-              onClick={onClose}
-              className="md:hidden p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
-            >
-              <X size={18} />
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            {onSyncOpen && (
+              <button
+                onClick={onSyncOpen}
+                className="p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+                title="同期設定"
+              >
+                <RefreshCw size={16} />
+              </button>
+            )}
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="md:hidden p-2 rounded-lg text-slate-400 hover:bg-slate-100 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Nav */}
