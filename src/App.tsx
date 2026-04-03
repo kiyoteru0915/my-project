@@ -61,15 +61,13 @@ function App() {
           }
           <span className="font-semibold text-slate-800 truncate">{getViewTitle()}</span>
         </div>
-        {isSupabaseEnabled && (
-          <button
-            onClick={() => setIsSyncOpen(true)}
-            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 flex-shrink-0"
-            title="同期設定"
-          >
-            <RefreshCw size={18} className={syncStatus === 'syncing' ? 'animate-spin text-blue-500' : syncStatus === 'synced' ? 'text-green-500' : ''} />
-          </button>
-        )}
+        <button
+          onClick={() => setIsSyncOpen(true)}
+          className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 flex-shrink-0"
+          title="同期設定"
+        >
+          <RefreshCw size={18} className={syncStatus === 'syncing' ? 'animate-spin text-blue-500' : syncStatus === 'synced' ? 'text-green-500' : ''} />
+        </button>
         {timerState.taskId && (
           <button
             onClick={() => openTimer(timerState.taskId!)}
