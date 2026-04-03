@@ -137,6 +137,7 @@ interface StoreState {
   setSelectedTaskId: (id: string | null) => void
 
   syncNow: () => Promise<void>
+  pullFromCloud: () => Promise<void>
   switchWorkspace: (id: string) => Promise<boolean>
 
   addProject: (name: string, color: string) => void
@@ -198,6 +199,27 @@ export const useStore = create<StoreState>()(
           set({ syncStatus: 'synced', lastSyncedAt: new Date().toISOString() })
         } catch {
           set({ syncStatus: 'error' })
+        }
+      },
+
+      pullFromCloud: async () => {
+        if (!isSupabaseEnabled) return
+        const { workspaceId } = get()
+        if (!workspaceId) return
+        try {
+          const data = await pullAllFromCloud(workspaceId)
+          if (!data) return
+          if (data.projects.length > 0 || data.tasks.length > 0) {
+            set({
+              projects: data.projects,
+              subFolders: data.subFolders,
+              tasks: data.tasks,
+              syncStatus: 'synced',
+              lastSyncedAt: new Date().toISOString(),
+            })
+          }
+        } catch {
+          // サイレントに失敗（ローカルデータを維持）
         }
       },
 

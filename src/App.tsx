@@ -9,15 +9,15 @@ import FocusTimer from './components/FocusTimer'
 import SyncModal from './components/SyncModal'
 
 function App() {
-  const { currentView, selectedTaskId, isTimerOpen, tickTimer, timerState, projects, subFolders, openTimer, syncStatus, switchWorkspace, workspaceId } = useStore()
+  const { currentView, selectedTaskId, isTimerOpen, tickTimer, timerState, projects, subFolders, openTimer, syncStatus, pullFromCloud } = useStore()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSyncOpen, setIsSyncOpen] = useState(false)
 
-  // アプリ起動時にクラウドから最新データを取得
+  // 起動時 + 30秒ごとにクラウドから最新データを取得
   useEffect(() => {
-    if (workspaceId) {
-      switchWorkspace(workspaceId)
-    }
+    pullFromCloud()
+    const interval = setInterval(() => pullFromCloud(), 30000)
+    return () => clearInterval(interval)
   }, [])
 
   useEffect(() => {
