@@ -1,15 +1,18 @@
 import { useEffect, useState } from 'react'
-import { Menu, Calendar, FolderOpen, Timer } from 'lucide-react'
+import { Menu, Calendar, FolderOpen, Timer, RefreshCw } from 'lucide-react'
 import { useStore } from './store/useStore'
 import Sidebar from './components/Sidebar'
 import TodayView from './components/TodayView'
 import ProjectView from './components/ProjectView'
 import TaskDetailModal from './components/TaskDetailModal'
 import FocusTimer from './components/FocusTimer'
+import SyncModal from './components/SyncModal'
+import { isSupabaseEnabled } from './lib/supabase'
 
 function App() {
-  const { currentView, selectedTaskId, isTimerOpen, tickTimer, timerState, projects, subFolders, openTimer } = useStore()
+  const { currentView, selectedTaskId, isTimerOpen, tickTimer, timerState, projects, subFolders, openTimer, syncStatus } = useStore()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isSyncOpen, setIsSyncOpen] = useState(false)
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -58,6 +61,15 @@ function App() {
           }
           <span className="font-semibold text-slate-800 truncate">{getViewTitle()}</span>
         </div>
+        {isSupabaseEnabled && (
+          <button
+            onClick={() => setIsSyncOpen(true)}
+            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 flex-shrink-0"
+            title="同期設定"
+          >
+            <RefreshCw size={18} className={syncStatus === 'syncing' ? 'animate-spin text-blue-500' : syncStatus === 'synced' ? 'text-green-500' : ''} />
+          </button>
+        )}
         {timerState.taskId && (
           <button
             onClick={() => openTimer(timerState.taskId!)}
@@ -94,6 +106,7 @@ function App() {
 
       {selectedTaskId && <TaskDetailModal />}
       {isTimerOpen && <FocusTimer />}
+      {isSyncOpen && <SyncModal onClose={() => setIsSyncOpen(false)} />}
     </div>
   )
 }

@@ -3,6 +3,16 @@ import { persist } from 'zustand/middleware'
 import { Task, Project, SubFolder, ViewType, RecurrenceType } from '../types'
 import { format, addWeeks, addMonths, addYears, addDays, getDaysInMonth } from 'date-fns'
 import { generateMilestones, generateSubTaskSegments } from '../utils/taskBreakdown'
+import { pushAllToCloud, pullAllFromCloud } from '../lib/syncService'
+import { isSupabaseEnabled } from '../lib/supabase'
+
+function generateWorkspaceId(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = Math.random() * 16 | 0
+    const v = c === 'x' ? r : (r & 0x3 | 0x8)
+    return v.toString(16)
+  })
+}
 
 function generateId(): string {
   return Math.random().toString(36).substring(2, 11)
@@ -108,6 +118,8 @@ interface TimerState {
   totalElapsedSeconds: number
 }
 
+export type SyncStatus = 'idle' | 'syncing' | 'synced' | 'error'
+
 interface StoreState {
   projects: Project[]
   subFolders: SubFolder[]
@@ -117,8 +129,15 @@ interface StoreState {
   timerState: TimerState
   isTimerOpen: boolean
 
+  workspaceId: string
+  syncStatus: SyncStatus
+  lastSyncedAt: string | null
+
   setCurrentView: (view: ViewType) => void
   setSelectedTaskId: (id: string | null) => void
+
+  syncNow: () => Promise<void>
+  switchWorkspace: (id: string) => Promise<boolean>
 
   addProject: (name: string, color: string) => void
   deleteProject: (id: string) => void
@@ -159,8 +178,50 @@ export const useStore = create<StoreState>()(
         currentSegmentIndex: 0, segmentElapsedSeconds: 0, totalElapsedSeconds: 0,
       },
 
+      workspaceId: generateWorkspaceId(),
+      syncStatus: 'idle',
+      lastSyncedAt: null,
+
       setCurrentView: (view) => set({ currentView: view }),
       setSelectedTaskId: (id) => set({ selectedTaskId: id }),
+
+      syncNow: async () => {
+        if (!isSupabaseEnabled) return
+        const state = get()
+        set({ syncStatus: 'syncing' })
+        try {
+          await pushAllToCloud(state.workspaceId, {
+            projects: state.projects,
+            subFolders: state.subFolders,
+            tasks: state.tasks,
+          })
+          set({ syncStatus: 'synced', lastSyncedAt: new Date().toISOString() })
+        } catch {
+          set({ syncStatus: 'error' })
+        }
+      },
+
+      switchWorkspace: async (id: string) => {
+        if (!isSupabaseEnabled) return false
+        set({ syncStatus: 'syncing' })
+        try {
+          const data = await pullAllFromCloud(id)
+          if (!data) { set({ syncStatus: 'error' }); return false }
+          set({
+            workspaceId: id,
+            projects: data.projects,
+            subFolders: data.subFolders,
+            tasks: data.tasks,
+            syncStatus: 'synced',
+            lastSyncedAt: new Date().toISOString(),
+            currentView: 'today',
+          })
+          return true
+        } catch {
+          set({ syncStatus: 'error' })
+          return false
+        }
+      },
 
       addProject: (name, color) => {
         const { projects } = get()
@@ -396,7 +457,46 @@ export const useStore = create<StoreState>()(
         subFolders: state.subFolders,
         tasks: state.tasks,
         timerState: state.timerState,
+        workspaceId: state.workspaceId,
+        lastSyncedAt: state.lastSyncedAt,
       }),
     }
   )
 )
+
+// Auto-push to Supabase 2 seconds after data changes (not timer changes)
+if (isSupabaseEnabled) {
+  let prevProjects = useStore.getState().projects
+  let prevSubFolders = useStore.getState().subFolders
+  let prevTasks = useStore.getState().tasks
+  let pushTimer: ReturnType<typeof setTimeout> | null = null
+
+  useStore.subscribe((state) => {
+    const dataChanged =
+      state.projects !== prevProjects ||
+      state.subFolders !== prevSubFolders ||
+      state.tasks !== prevTasks
+
+    prevProjects = state.projects
+    prevSubFolders = state.subFolders
+    prevTasks = state.tasks
+
+    if (!dataChanged || !state.workspaceId) return
+
+    if (pushTimer) clearTimeout(pushTimer)
+    useStore.setState({ syncStatus: 'syncing' })
+    pushTimer = setTimeout(async () => {
+      const s = useStore.getState()
+      try {
+        await pushAllToCloud(s.workspaceId, {
+          projects: s.projects,
+          subFolders: s.subFolders,
+          tasks: s.tasks,
+        })
+        useStore.setState({ syncStatus: 'synced', lastSyncedAt: new Date().toISOString() })
+      } catch {
+        useStore.setState({ syncStatus: 'error' })
+      }
+    }, 2000)
+  })
+}
