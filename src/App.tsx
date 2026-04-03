@@ -7,7 +7,6 @@ import ProjectView from './components/ProjectView'
 import TaskDetailModal from './components/TaskDetailModal'
 import FocusTimer from './components/FocusTimer'
 import SyncModal from './components/SyncModal'
-import { isSupabaseEnabled } from './lib/supabase'
 
 function App() {
   const { currentView, selectedTaskId, isTimerOpen, tickTimer, timerState, projects, subFolders, openTimer, syncStatus } = useStore()
