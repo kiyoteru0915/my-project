@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Menu, Calendar, FolderOpen, Timer, RefreshCw } from 'lucide-react'
 import { useStore } from './store/useStore'
 import Sidebar from './components/Sidebar'
@@ -9,9 +9,10 @@ import FocusTimer from './components/FocusTimer'
 import SyncModal from './components/SyncModal'
 
 function App() {
-  const { currentView, selectedTaskId, isTimerOpen, tickTimer, timerState, projects, subFolders, openTimer, syncStatus, pullFromCloud } = useStore()
+  const { currentView, selectedTaskId, isTimerOpen, tickTimer, timerState, projects, subFolders, tasks, openTimer, syncStatus, pullFromCloud } = useStore()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSyncOpen, setIsSyncOpen] = useState(false)
+  const prevSegmentIndexRef = useRef<number>(timerState.currentSegmentIndex)
 
   // 起動時 + 30秒ごとにクラウドから最新データを取得
   useEffect(() => {
@@ -26,6 +27,52 @@ function App() {
     }, 1000)
     return () => clearInterval(interval)
   }, [tickTimer, timerState.isRunning])
+
+  // ブラウザタブのタイトルに残り時間を表示
+  useEffect(() => {
+    if (!timerState.isRunning || !timerState.taskId) {
+      document.title = 'タスク管理'
+      return
+    }
+    const task = tasks.find((t) => t.id === timerState.taskId)
+    const currentSegment = task?.subTaskSegments[timerState.currentSegmentIndex]
+    if (!currentSegment) return
+    const segRemaining = Math.max(0, currentSegment.durationMinutes * 60 - timerState.segmentElapsedSeconds)
+    const m = Math.floor(segRemaining / 60)
+    const s = segRemaining % 60
+    const mm = String(m).padStart(2, '0')
+    const ss = String(s).padStart(2, '0')
+    document.title = `⏱ ${mm}:${ss} — ${currentSegment.name}`
+  }, [timerState, tasks])
+
+  // セグメント切り替わり時に通知を送る
+  useEffect(() => {
+    const current = timerState.currentSegmentIndex
+    const prev = prevSegmentIndexRef.current
+
+    if (current !== prev && timerState.taskId) {
+      prevSegmentIndexRef.current = current
+      const task = tasks.find((t) => t.id === timerState.taskId)
+      const nextSegment = task?.subTaskSegments[current]
+
+      if (!('Notification' in window)) return
+      if (Notification.permission !== 'granted') return
+
+      if (nextSegment) {
+        new Notification(`次のステップへ — ${task?.title}`, {
+          body: `▶ ${nextSegment.name}（${nextSegment.durationMinutes}分）`,
+          icon: '/icon-192.svg',
+          silent: false,
+        })
+      } else {
+        // 全セグメント完了
+        new Notification(`タイマー完了 — ${task?.title}`, {
+          body: 'すべてのセグメントが完了しました 🎉',
+          icon: '/icon-192.svg',
+        })
+      }
+    }
+  }, [timerState.currentSegmentIndex, timerState.taskId, tasks])
 
   // Close sidebar when view changes (mobile)
   useEffect(() => {

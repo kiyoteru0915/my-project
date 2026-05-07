@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { X, FolderPlus } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { X, FolderPlus, Plus } from 'lucide-react'
 import { useStore } from '../store/useStore'
 
 interface Props {
@@ -16,6 +16,7 @@ export default function CreateProjectModal({ onClose }: Props) {
   const { addProject } = useStore()
   const [name, setName] = useState('')
   const [color, setColor] = useState('#3b82f6')
+  const colorInputRef = useRef<HTMLInputElement>(null)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -71,13 +72,29 @@ export default function CreateProjectModal({ onClose }: Props) {
                   style={{ backgroundColor: c }}
                 />
               ))}
-              <input
-                type="color"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                className="w-8 h-8 rounded-full border-2 border-slate-200 cursor-pointer overflow-hidden"
+              <button
+                type="button"
+                onClick={() => colorInputRef.current?.click()}
+                className={`w-8 h-8 rounded-full border-2 border-dashed flex items-center justify-center transition-all hover:scale-105 ${
+                  !presetColors.includes(color)
+                    ? 'ring-2 ring-offset-2 scale-110 border-transparent'
+                    : 'border-slate-300 hover:border-slate-400'
+                }`}
+                style={!presetColors.includes(color) ? { backgroundColor: color } : undefined}
                 title="カスタムカラー"
-              />
+              >
+                {presetColors.includes(color)
+                  ? <Plus size={14} className="text-slate-400" />
+                  : null
+                }
+                <input
+                  ref={colorInputRef}
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="sr-only"
+                />
+              </button>
             </div>
           </div>
 

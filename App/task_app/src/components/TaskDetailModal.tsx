@@ -36,6 +36,7 @@ export default function TaskDetailModal() {
   const [editTitle, setEditTitle] = useState('')
   const [editDescription, setEditDescription] = useState('')
   const [editDeadline, setEditDeadline] = useState('')
+  const [editPlannedDate, setEditPlannedDate] = useState('')
   const [editEstimatedMinutes, setEditEstimatedMinutes] = useState(60)
   const [editSubFolderId, setEditSubFolderId] = useState<string | undefined>(undefined)
   const [editRecurrence, setEditRecurrence] = useState<RecurrenceType>('none')
@@ -60,6 +61,7 @@ export default function TaskDetailModal() {
     setEditTitle(task.title)
     setEditDescription(task.description)
     setEditDeadline(task.deadline)
+    setEditPlannedDate(task.plannedDate ?? '')
     setEditEstimatedMinutes(task.estimatedMinutes)
     setEditSubFolderId(task.subFolderId)
     setEditRecurrence(task.recurrence ?? 'none')
@@ -72,6 +74,7 @@ export default function TaskDetailModal() {
       title: editTitle.trim() || task.title,
       description: editDescription.trim(),
       deadline: editDeadline,
+      plannedDate: editPlannedDate || undefined,
       estimatedMinutes: editEstimatedMinutes,
       subFolderId: editSubFolderId,
       recurrence: editRecurrence,
@@ -292,17 +295,29 @@ export default function TaskDetailModal() {
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">予想時間</label>
-                  <select
-                    value={editEstimatedMinutes}
-                    onChange={(e) => setEditEstimatedMinutes(Number(e.target.value))}
+                  <label className="block text-xs font-semibold text-slate-600 mb-1">
+                    実施予定日 <span className="font-normal text-slate-400">（任意）</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={editPlannedDate}
+                    onChange={(e) => setEditPlannedDate(e.target.value)}
                     className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-                  >
-                    {timeOptions.map((m) => (
-                      <option key={m} value={m}>{m}分</option>
-                    ))}
-                  </select>
+                  />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">予想時間</label>
+                <select
+                  value={editEstimatedMinutes}
+                  onChange={(e) => setEditEstimatedMinutes(Number(e.target.value))}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                >
+                  {timeOptions.map((m) => (
+                    <option key={m} value={m}>{m}分</option>
+                  ))}
+                </select>
               </div>
 
               <div>
@@ -420,6 +435,18 @@ export default function TaskDetailModal() {
                   {format(parseISO(task.deadline), 'yyyy年M月d日', { locale: ja })}
                 </p>
               </div>
+
+              {task.plannedDate && (
+                <div className="bg-blue-50 rounded-xl p-3">
+                  <div className="flex items-center gap-2 text-blue-600 mb-1">
+                    <Calendar size={14} />
+                    <span className="text-xs font-medium">実施予定日</span>
+                  </div>
+                  <p className="text-sm font-semibold text-blue-700">
+                    {format(parseISO(task.plannedDate), 'yyyy年M月d日', { locale: ja })}
+                  </p>
+                </div>
+              )}
 
               {task.completionDate && (
                 <div className="bg-green-50 rounded-xl p-3">

@@ -1,0 +1,4 @@
+[build]
+  base    = "App/task_app"
+  command = "npm run build"
+  publish = "App/task_app/dist"

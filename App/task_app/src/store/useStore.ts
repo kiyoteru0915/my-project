@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware'
 import { Task, Project, SubFolder, ViewType, RecurrenceType } from '../types'
 import { format, addWeeks, addMonths, addYears, addDays, getDaysInMonth } from 'date-fns'
 import { generateMilestones, generateSubTaskSegments } from '../utils/taskBreakdown'
-import { pushAllToCloud, pullAllFromCloud } from '../lib/syncService'
+import { pushAllToCloud, pullAllFromCloud, deleteFromCloud } from '../lib/syncService'
 import { isSupabaseEnabled } from '../lib/supabase'
 
 // Auto-push tracking: null means "not yet hydrated from localStorage"
@@ -57,70 +57,6 @@ function nextDeadline(deadline: string, recurrence: RecurrenceType, recurrenceDa
   return deadline
 }
 
-const today = format(new Date(), 'yyyy-MM-dd')
-const todayDate = new Date()
-
-const sampleProjects: Project[] = [
-  { id: 'proj-marketing', name: 'マーケティング', color: '#8b5cf6', order: 0, createdAt: new Date().toISOString() },
-  { id: 'proj-product', name: '製品開発', color: '#06b6d4', order: 1, createdAt: new Date().toISOString() },
-]
-
-const sampleSubFolders: SubFolder[] = [
-  { id: 'sf-pr', projectId: 'proj-marketing', name: 'プレスリリース', createdAt: new Date().toISOString() },
-  { id: 'sf-sns', projectId: 'proj-marketing', name: 'SNS', createdAt: new Date().toISOString() },
-]
-
-const deadline1 = new Date(todayDate); deadline1.setDate(deadline1.getDate() + 30)
-const deadline2 = new Date(todayDate); deadline2.setDate(deadline2.getDate() + 14)
-const deadline3 = new Date(todayDate); deadline3.setDate(deadline3.getDate() + 7)
-const deadline4 = new Date(todayDate); deadline4.setDate(deadline4.getDate() + 45)
-
-const sampleTasks: Task[] = [
-  {
-    id: 'task-1', projectId: 'proj-marketing', subFolderId: 'sf-pr',
-    title: 'プレスリリース作成', description: '新製品ローンチに向けたプレスリリースの作成と配信準備',
-    deadline: format(deadline1, 'yyyy-MM-dd'), estimatedMinutes: 90,
-    subTaskSegments: generateSubTaskSegments(90),
-    milestones: generateMilestones('プレスリリース作成', todayDate, deadline1),
-    status: 'in-progress', isToday: true, recurrence: 'none', order: 0,
-    createdAt: new Date().toISOString(), timerElapsedSeconds: 0,
-  },
-  {
-    id: 'task-2', projectId: 'proj-marketing', subFolderId: 'sf-sns',
-    title: 'SNSキャンペーン企画', description: '夏季キャンペーンのSNS戦略立案とコンテンツ計画',
-    deadline: format(deadline2, 'yyyy-MM-dd'), estimatedMinutes: 60,
-    subTaskSegments: generateSubTaskSegments(60),
-    milestones: generateMilestones('SNSキャンペーン企画', todayDate, deadline2),
-    status: 'todo', isToday: false, recurrence: 'monthly', order: 1,
-    createdAt: new Date().toISOString(), timerElapsedSeconds: 0,
-  },
-  {
-    id: 'task-3', projectId: 'proj-marketing',
-    title: '市場調査レポート', description: '競合他社分析と市場トレンドのレポートまとめ',
-    deadline: today, estimatedMinutes: 120,
-    subTaskSegments: generateSubTaskSegments(120), milestones: [],
-    status: 'todo', isToday: false, recurrence: 'none', order: 2,
-    createdAt: new Date().toISOString(), timerElapsedSeconds: 0,
-  },
-  {
-    id: 'task-4', projectId: 'proj-product',
-    title: 'UI/UXデザインレビュー', description: '新機能のUI/UXデザインのレビューとフィードバック',
-    deadline: format(deadline3, 'yyyy-MM-dd'), estimatedMinutes: 60,
-    subTaskSegments: generateSubTaskSegments(60),
-    milestones: generateMilestones('UI/UXデザインレビュー', todayDate, deadline3),
-    status: 'in-progress', isToday: true, recurrence: 'none', order: 0,
-    createdAt: new Date().toISOString(), timerElapsedSeconds: 0,
-  },
-  {
-    id: 'task-5', projectId: 'proj-product',
-    title: 'APIドキュメント整備', description: '新しいAPIエンドポイントのドキュメント作成と整備',
-    deadline: format(deadline4, 'yyyy-MM-dd'), estimatedMinutes: 120,
-    subTaskSegments: generateSubTaskSegments(120),
-    milestones: generateMilestones('APIドキュメント整備', todayDate, deadline4),
-    status: 'todo', isToday: false, recurrence: 'none', order: 1,
-    createdAt: new Date().toISOString(), timerElapsedSeconds: 0,
-  },
-]
 
 interface TimerState {
   taskId: string | null
@@ -180,9 +116,9 @@ interface StoreState {
 export const useStore = create<StoreState>()(
   persist(
     (set, get) => ({
-      projects: sampleProjects,
-      subFolders: sampleSubFolders,
-      tasks: sampleTasks,
+      projects: [],
+      subFolders: [],
+      tasks: [],
       currentView: 'today',
       selectedTaskId: null,
       isTimerOpen: false,
@@ -225,9 +161,25 @@ export const useStore = create<StoreState>()(
             set({ syncStatus: 'error' })
             return
           }
-          const newProjects = data.projects.length > 0 ? data.projects : get().projects
-          const newSubFolders = data.subFolders.length > 0 ? data.subFolders : get().subFolders
-          const newTasks = data.tasks.length > 0 ? data.tasks : get().tasks
+
+          const cloudHasData = data.projects.length > 0 || data.tasks.length > 0
+          const local = get()
+          const localHasData = local.projects.length > 0 || local.tasks.length > 0
+
+          if (!cloudHasData && localHasData) {
+            // クラウドにデータがなくローカルにある場合 → ローカルをクラウドへ送信
+            await pushAllToCloud(workspaceId, {
+              projects: local.projects,
+              subFolders: local.subFolders,
+              tasks: local.tasks,
+            })
+            set({ syncStatus: 'synced', lastSyncedAt: new Date().toISOString() })
+            return
+          }
+
+          const newProjects = cloudHasData ? data.projects : local.projects
+          const newSubFolders = cloudHasData ? data.subFolders : local.subFolders
+          const newTasks = cloudHasData ? data.tasks : local.tasks
           // Update prev refs BEFORE set() to prevent auto-push from firing
           updatePrevRefs(newProjects, newSubFolders, newTasks)
           set({
@@ -248,7 +200,8 @@ export const useStore = create<StoreState>()(
         set({ syncStatus: 'syncing' })
         try {
           const data = await pullAllFromCloud(id)
-          if (!data || (data.projects.length === 0 && data.tasks.length === 0)) {
+          // nullはSupabaseエラー。空データは「コードは正しいが未同期」なので許容する
+          if (!data) {
             set({ syncStatus: 'error' })
             return false
           }
@@ -281,12 +234,20 @@ export const useStore = create<StoreState>()(
       },
 
       deleteProject: (id) => {
+        const { subFolders, tasks, workspaceId } = get()
+        const removedSfIds = subFolders.filter((sf) => sf.projectId === id).map((sf) => sf.id)
+        const removedTaskIds = tasks.filter((t) => t.projectId === id).map((t) => t.id)
         set((state) => ({
           projects: state.projects.filter((p) => p.id !== id),
           subFolders: state.subFolders.filter((sf) => sf.projectId !== id),
           tasks: state.tasks.filter((t) => t.projectId !== id),
           currentView: state.currentView === id ? 'today' : state.currentView,
         }))
+        if (isSupabaseEnabled) {
+          deleteFromCloud(workspaceId, 'projects', id)
+          removedSfIds.forEach((sfId) => deleteFromCloud(workspaceId, 'sub_folders', sfId))
+          removedTaskIds.forEach((tId) => deleteFromCloud(workspaceId, 'tasks', tId))
+        }
       },
 
       reorderProjects: (orderedIds) => {
@@ -303,11 +264,13 @@ export const useStore = create<StoreState>()(
       },
 
       deleteSubFolder: (id) => {
+        const { workspaceId } = get()
         set((state) => ({
           subFolders: state.subFolders.filter((sf) => sf.id !== id),
           tasks: state.tasks.map((t) => t.subFolderId === id ? { ...t, subFolderId: undefined } : t),
           currentView: state.currentView === `sf:${id}` ? 'today' : state.currentView,
         }))
+        if (isSupabaseEnabled) deleteFromCloud(workspaceId, 'sub_folders', id)
       },
 
       addTask: (taskData) => {
@@ -383,7 +346,9 @@ export const useStore = create<StoreState>()(
       },
 
       deleteTask: (id) => {
+        const { workspaceId } = get()
         set((state) => ({ tasks: state.tasks.filter((t) => t.id !== id) }))
+        if (isSupabaseEnabled) deleteFromCloud(workspaceId, 'tasks', id)
       },
 
       toggleTaskToday: (id) => {

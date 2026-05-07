@@ -7,17 +7,23 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['icon-192.svg', 'icon-512.svg'],
+      includeAssets: ['icon-192.svg', 'icon-512.svg', 'apple-touch-icon.png'],
       manifest: {
         name: 'タスク管理',
         short_name: 'タスク管理',
         description: 'プロジェクトとタスクを管理するアプリ',
-        theme_color: '#2563eb',
-        background_color: '#f8fafc',
+        theme_color: '#0d0d1a',
+        background_color: '#08080f',
         display: 'standalone',
         orientation: 'portrait',
         start_url: '/',
         icons: [
+          {
+            src: '/apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png',
+            purpose: 'any',
+          },
           {
             src: '/icon-192.svg',
             sizes: '192x192',

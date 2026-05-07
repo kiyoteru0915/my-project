@@ -22,6 +22,7 @@ export default function CreateTaskModal({ projectId, defaultSubFolderId, onClose
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
   const [deadline, setDeadline] = useState(format(new Date(), 'yyyy-MM-dd'))
+  const [plannedDate, setPlannedDate] = useState('')
   const [estimatedMinutes, setEstimatedMinutes] = useState(60)
   const [isToday, setIsToday] = useState(false)
   const [selectedSubFolderId, setSelectedSubFolderId] = useState<string>(defaultSubFolderId ?? '')
@@ -57,6 +58,7 @@ export default function CreateTaskModal({ projectId, defaultSubFolderId, onClose
       title: title.trim(),
       description: description.trim(),
       deadline,
+      plannedDate: plannedDate || undefined,
       estimatedMinutes,
       subTaskSegments: selectedSegments,
       milestones: selectedMilestones,
@@ -150,16 +152,29 @@ export default function CreateTaskModal({ projectId, defaultSubFolderId, onClose
             </div>
           )}
 
-          {/* Deadline */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">締切日</label>
-            <input
-              type="date"
-              value={deadline}
-              onChange={(e) => setDeadline(e.target.value)}
-              required
-              className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer hover:border-slate-300 transition-all"
-            />
+          {/* Deadline & Planned date */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">締切日</label>
+              <input
+                type="date"
+                value={deadline}
+                onChange={(e) => setDeadline(e.target.value)}
+                required
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer hover:border-slate-300 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                実施予定日 <span className="font-normal text-slate-400">（任意）</span>
+              </label>
+              <input
+                type="date"
+                value={plannedDate}
+                onChange={(e) => setPlannedDate(e.target.value)}
+                className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer hover:border-slate-300 transition-all"
+              />
+            </div>
           </div>
 
           {/* Estimated time */}

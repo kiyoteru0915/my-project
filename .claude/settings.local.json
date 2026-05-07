@@ -30,14 +30,26 @@
       "Bash(/usr/local/bin/node --version)",
       "Read(//usr/local/lib/node_modules/**)",
       "Bash(/usr/local/bin/node /usr/local/lib/node_modules/npm/bin/npm-cli.js --version)",
-      "Bash(PATH=\"/usr/local/bin:$PATH\" npm install --prefix /Users/sakomotokiyotaka/Documents/projects/my-project vite-plugin-pwa --save-dev)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" npm install --prefix /Users/sakomotokiyotaka/Documents/projects/Claude vite-plugin-pwa --save-dev)",
       "Bash(PATH=\"/usr/local/bin:$PATH\" git init)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(PATH=\"/usr/local/bin:$PATH\" npm install --prefix /Users/sakomotokiyotaka/Documents/projects/my-project @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" npm install --prefix /Users/sakomotokiyotaka/Documents/projects/Claude @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities)",
       "Bash(git remote:*)",
       "Bash(git push:*)",
-      "Bash(PATH=\"/usr/local/bin:$PATH\" npm run build)"
+      "Bash(PATH=\"/usr/local/bin:$PATH\" npm run build)",
+      "WebFetch(domain:my-project-md2t.vercel.app)",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" npm install @supabase/supabase-js)",
+      "Bash(ls /Users/sakomotokiyotaka/Documents/projects/Claude/src/*.d.ts)",
+      "Bash(ls /Users/sakomotokiyotaka/Documents/projects/Claude/*.d.ts)",
+      "Bash(git -C /Users/sakomotokiyotaka/Documents/projects/Claude ls-files .env.local)",
+      "Bash(npm run:*)",
+      "Bash(/usr/local/bin/npm run:*)",
+      "Bash(source ~/.zshrc)",
+      "Read(//opt/homebrew/bin/**)",
+      "Read(//private/tmp/node-v20.11.1-darwin-arm64/lib/node_modules/npm/bin/**)",
+      "Bash(/usr/local/bin/node -e \"require\\(''child_process''\\).exec\\(''ls /usr/local/bin/npm'', \\(e,o\\)=>console.log\\(o,e\\)\\)\")",
+      "Bash(PATH=\"/usr/local/bin:$PATH\" /usr/local/bin/npm --prefix /Users/sakomotokiyotaka/Documents/projects/Claude run build)"
     ]
   }
 }

@@ -95,12 +95,12 @@ export default function TodayView() {
       </div>
 
       {/* Task List */}
-      <div className="px-4 md:px-8 py-4 md:py-6 space-y-3">
+      <div className="px-3 md:px-5 py-3 space-y-0.5">
         {filtered.length === 0 ? (
-          <div className="text-center py-20 text-slate-400">
-            <Calendar size={48} className="mx-auto mb-4 text-slate-300" />
-            <p className="text-lg font-medium">今日のタスクはありません</p>
-            <p className="text-sm mt-1">タスクを追加するか、別のプロジェクトのタスクを今日に設定してください</p>
+          <div className="text-center py-16 text-slate-400">
+            <Calendar size={36} className="mx-auto mb-3 text-slate-300" />
+            <p className="text-sm font-medium">今日のタスクはありません</p>
+            <p className="text-xs mt-1 text-slate-300">タスクに「今日に追加」を設定してください</p>
           </div>
         ) : (
           filtered.map((task) => {

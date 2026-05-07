@@ -22,6 +22,7 @@ export interface Task {
   title: string
   description: string
   deadline: string // ISO date - final deadline
+  plannedDate?: string // ISO date - when you plan to work on it
   completionDate?: string // ISO date - when actually completed
   estimatedMinutes: number
   subTaskSegments: SubTaskSegment[]
